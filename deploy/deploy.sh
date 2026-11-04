@@ -38,9 +38,9 @@ compose() {
 
 wait_for_health() {
     for ((i=1; i<=60; i++)); do
-        STATUS="$(docker inspect ]
-            --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.StateStatus}}{{end}}' \
-            keyword-diggger 2>/dev/null || true)"
+        STATUS="$(docker inspect \
+            --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' \
+            keyword-digger 2>/dev/null || true)"
 
         if [[ "$STATUS" == "healthy" ]]; then
             echo "Application is healthy."
