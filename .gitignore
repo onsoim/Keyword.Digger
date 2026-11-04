@@ -38,3 +38,16 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+########## ONSOIM ##########
+
+### Local environment ###
+.env
+.env.*
+!.env.example
+
+### Deployment secretes ###
+deploy/deploy.env
+
+### Logs ###
+*.log

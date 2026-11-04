@@ -1,0 +1,22 @@
+name: keyword-digger
+
+services:
+  app:
+    container_name: keyword-digger
+
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+
+    ports:
+      - "${APP_PORT:-18080}:8080"
+    
+    restart: unless-stopped
+
+    init: true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
