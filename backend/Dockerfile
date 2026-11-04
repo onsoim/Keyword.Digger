@@ -12,7 +12,7 @@ RUN chmod +x ./gradlew && \
     test -n "$JAR_FILE" && \
     cp "$JAR_FILE" /workspace/app.jar
 
-FROM eclipse-termurin:21-jre
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
