@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk AS builder
+FROM eclipse-termurin:21-jre AS builder
 
 WORKDIR /workspace
 

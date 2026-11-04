@@ -5,7 +5,7 @@ services:
     container_name: keyword-digger
 
     build:
-      context: ../..
+      context: ..
       dockerfile: backend/Dockerfile
 
     ports:

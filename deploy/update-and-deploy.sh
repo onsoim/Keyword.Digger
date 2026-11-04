@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 RUNTIME_DIR="${KEYWORD_DIGGER_RUNTIME_DIR:-/volume1/docker/keyword-digger/runtime}"
 ENV_FILE="$RUNTIME_DIR/deploy.env"
@@ -22,7 +22,7 @@ set +a
 
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-develop}"
 
-if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+if ! mkdir "$LOCK_FILE" 2>/dev/null; then
     echo "Another deployment is running. Skipping."
     exit 0
 fi
@@ -43,7 +43,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 
-git fetch oriigin "$DEPLOY_BRANCH"
+git fetch origin "$DEPLOY_BRANCH"
 
 LOCAL_SHA="$(git rev-parse HEAD)"
 REMOTE_SHA="$(git rev-parse FETCH_HEAD)"
