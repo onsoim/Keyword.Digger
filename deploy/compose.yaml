@@ -2,6 +2,8 @@ name: keyword-digger
 
 services:
   app:
+    image: keyword-digger:${IMAGE_TAG:-local}
+
     container_name: keyword-digger
 
     build:

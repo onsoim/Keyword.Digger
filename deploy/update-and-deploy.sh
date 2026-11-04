@@ -7,7 +7,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 RUNTIME_DIR="${KEYWORD_DIGGER_RUNTIME_DIR:-/volume1/docker/keyword-digger/runtime}"
 ENV_FILE="$RUNTIME_DIR/deploy.env"
-LOCK_FILE="$RUNTIME_DIR/update.lock"
+DEPLOYED_SHA_FILE="$RUNTIME_DIR/deployed.sha"
+LOCK_DIR="$RUNTIME_DIR/update.lock"
 
 mkdir -p "$RUNTIME_DIR"
 
@@ -22,12 +23,12 @@ set +a
 
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-develop}"
 
-if ! mkdir "$LOCK_FILE" 2>/dev/null; then
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
     echo "Another deployment is running. Skipping."
     exit 0
 fi
 
-trap 'rmdir "$LOCK_FILE" 2/dev/null || true' EXIT
+trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
 cd "$REPO_ROOT"
 
@@ -48,16 +49,49 @@ git fetch origin "$DEPLOY_BRANCH"
 LOCAL_SHA="$(git rev-parse HEAD)"
 REMOTE_SHA="$(git rev-parse FETCH_HEAD)"
 
-if [[ "$LOCAL_SHA" == "$REMOTE_SHA" ]]; then
-    echo "No change detected."
-    exit 0
+if [[ "$LOCAL_SHA" != "$REMOTE_SHA" ]]; then
+
+    if ! git merge-base --is-ancestor "$LOCAL_SHA" "$REMOTE_SHA"; then
+        echo "Non fast-forward update detected. Deployment stopped."
+        exit 1
+    fi
+
+    git merge --ff-only "$REMOTE_SHA"
 fi
 
-if ! git merge-base --is-ancestor "$LOCAL_SHA" "$REMOTE_SHA"; then
-    echo "Non fast-forward update detected. Deployment stopped."
+TARGET_SHA="$(git rev-parse HEAD)"
+
+DEPLOYED_SHA=""
+
+if [[ -s "$DEPLOYED_SHA_FILE" ]]; then
+    IFS= read -r DEPLOYED_SHA < "$DEPLOYED_SHA_FILE" || true
+fi
+
+if [[ "$TARGET_SHA" == "$DEPLOYED_SHA" ]]; then
+
+    HEALTH_STATUS="$(docker inspect \
+        --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' \
+        keyword-digger 2>/dev/null || true)"
+    
+    if [[ "$HEALTH_STATUS" == "healthy" ]]; then
+        echo "No changes detected. Application is healthy."
+        exit 0
+    fi
+    echo "Application is not healthy. Re-deploying current revision"
+fi
+
+echo "Deploying $TARGET_SHA"
+
+if bash "$SCRIPT_DIR/deploy.sh"; then
+
+    TEMP_FILE="${DEPLOYED_SHA_FILE}.tmp"
+
+    printf '%s\n' "$TARGET_SHA" > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$DEPLOYED_SHA_FILE"
+
+    echo "Deployed completed: $TARGET_SHA"
+
+else
+    echo "Deployed failed. Previous deployed SHA is preserved."
     exit 1
 fi
-
-git merge --ff-only "$REMOTE_SHA"
-
-bash "$SCRIPT_DIR/deploy.sh"
