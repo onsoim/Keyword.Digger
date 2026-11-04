@@ -22,7 +22,7 @@ set +a
 
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-develop}"
 
-if ! mkdir "$LOCK_FILE" 2>/dev/null; then
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
     echo "Another deployment is running. Skipping."
     exit 0
 fi
