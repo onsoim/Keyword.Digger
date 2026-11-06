@@ -11,10 +11,10 @@ class GetTrendingKeywordsService(
     private val rssClient: GoogleTrendsRssClient,
     private val rssParser: GoogleTrendsRssParser,
 ) {
-    
+
     fun getTrendingKeywords(geo: String): List<TrendingKeyword> {
         val xml = rssClient.fetch(geo)
-        
+
         return rssParser.parse(xml)
     }
 }

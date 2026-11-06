@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 class TrendController(
     private val service: GetTrendingKeywordsService,
 ) {
-    
+
     @GetMapping
     fun getTrendingKeywords(
         @RequestParam(defaultValue = "US") geo: String,
