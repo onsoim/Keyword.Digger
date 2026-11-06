@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class KeywordDiggerApplication
 
 fun main(args: Array<String>) {
-	runApplication<KeywordDiggerApplication>(*args)
+    runApplication<KeywordDiggerApplication>(*args)
 }
