@@ -1,21 +1,59 @@
 name: keyword-digger
 
 services:
-  app:
+  backend:
     image: keyword-digger:${IMAGE_TAG:-local}
 
-    container_name: keyword-digger
+    container_name: keyword-digger-backend
 
     build:
       context: ..
       dockerfile: backend/Dockerfile
 
-    ports:
-      - "${APP_PORT:-18080}:8080"
+    expose:
+      - "8080"
+
+    # ports:
+    #   - "${APP_PORT:-18080}:8080"
     
     restart: unless-stopped
 
     init: true
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    image: keyword-digger-frontend:${IMAGE_TAG:-local}
+
+    container_name: keyword-digger-frontend
+
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+
+    ports:
+      - "${APP_PORT:-18080}:80"
+
+    depends_on:
+      backend:
+        condition: service_healty
+
+    restart: unless-stopped
+
+    init: true
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q -O /dev/null http://127.0.0.1/ || exit 1
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
 
     logging:
       driver: json-file

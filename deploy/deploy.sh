@@ -89,7 +89,7 @@ cd "$REPO_ROOT"
 
 echo "Building image for $CURRENT_SHA"
 
-if ! compose build app; then
+if ! compose build frontend backend; then
     echo "Docker build failed."
     exit 1
 fi
