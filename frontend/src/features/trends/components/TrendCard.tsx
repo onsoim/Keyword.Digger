@@ -22,10 +22,12 @@ export function TrendCard({ rank, trend }: Props) {
         <Stack spacing={2}>
           <Stack
             direction="row"
-            justifyContent="space-between"
-            alignItems="center"
+            sx={{
+                justifyContent: 'space-between',
+                alignItems: 'center',
+            }}
           >
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
               <Typography variant="h5" color="text.secondary">
                 {String(rank).padStart(2, '0')}
               </Typography>
@@ -53,7 +55,7 @@ export function TrendCard({ rank, trend }: Props) {
           {trend.relatedNews.length > 0 && (
             <>
               <Divider />
-              <Typography fontWeight="bold">
+              <Typography sx={{ fontWeight: 700 }}>
                 Related News
               </Typography>
 

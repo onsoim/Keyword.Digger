@@ -25,7 +25,7 @@ export default function App() {
     <Container maxWidth="md">
       <Stack spacing={3} sx={{ py: 5 }}>
         <Box>
-          <Typography variant="h4" fontWeight="bold">
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
             Keyword Digger
           </Typography>
 
@@ -34,8 +34,8 @@ export default function App() {
           </Typography>
         </Box>
 
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="h5" fontWeight="bold">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
             Hot Topics
           </Typography>
 
