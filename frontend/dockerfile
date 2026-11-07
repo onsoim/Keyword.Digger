@@ -11,9 +11,9 @@ COPY frontend/ ./
 RUN npm run build
 
 
-FROM nignx:alpine
+FROM nginx:alpine
 
-COPY deploy/ngix/default.conf \
+COPY deploy/nginx/default.conf \
     /etc/nginx/conf.d/default.conf
 
 COPY --from=builder /app/dist \
