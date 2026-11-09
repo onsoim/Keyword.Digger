@@ -38,34 +38,49 @@ compose() {
 
 wait_for_health() {
     for ((i=1; i<=60; i++)); do
-        STATUS="$(docker inspect \
+        frontend_status="$(docker inspect \
             --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' \
-            keyword-digger 2>/dev/null || true)"
+            keyword-digger-frontend 2>/dev/null || true)"
 
-        if [[ "$STATUS" == "healthy" ]]; then
+        backend_status="$(docker inspect \
+            --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' \
+            keyword-digger-backend 2>/dev/null || true)"
+
+        if [[   "$frontend_status"  == "healthy" &&
+                "$backend_status"   == "healthy" ]]; then
             echo "Application is healthy."
             return 0
         fi
 
-        if [[   "$STATUS" == "unhealthy" ||
-                "$STATUS" == "exited" ||
-                "$STATUS" == "dead" ]]; then
-                return 1
-        fi
-        
+        for status in "$frontend_status" "$backend_status"; do
+            if [[   "$status" == "unhealthy" ||
+                    "$status" == "exited" ||
+                    "$status" == "dead" ]]; then
+                    echo "Application health check failed."
+                    echo "Frontend: $frontend_status"
+                    echo "Backend: $backend_status"
+                    return 1
+            fi
+        done
+
         sleep 2
     done
+
+    echo "Health check timed out."
+    echo "Frontend: $frontend_status"
+    echo "Backend: $backend_status"
 
     return 1
 }
 
 show_logs() {
-    compose logs --tail=100 app || true
+    compose logs --tail=100 frontend backend || true
 }
 
 rollback() {
     if [[ -z "$PREVIOUS_SHA" ]] || 
-        ! docker image inspect "keyword-digger:$PREVIOUS_SHA" >/dev/null 2>&1; then
+        ! docker image inspect "keyword-digger:$PREVIOUS_SHA" >/dev/null 2>&1 ||
+        ! docker image inspect "keyword-digger-frontend:$PREVIOUS_SHA" >/dev/null 2>&1; then
         echo "No previous image available for rollback"
         return 1
     fi

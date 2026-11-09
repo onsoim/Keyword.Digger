@@ -44,6 +44,7 @@ Development:
 Quality:
     lint        Run frontend Oxlint
     test        Run backend tests
+    live-test   Run Google Trends live integration test
     build       Run frontend and backend
     check       Run lint, tests and build
 
@@ -94,8 +95,12 @@ case "${1:-help}" in
         echo "All checks passed."
         ;;
 
-    instll)
+    install)
         run_npm ci
+        ;;
+
+    live-test)
+        run_gradle liveTest
         ;;
     
     clean)
