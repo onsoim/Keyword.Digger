@@ -8,6 +8,7 @@ import java.net.http.HttpTimeoutException
 import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 
@@ -142,6 +143,65 @@ class GoogleTrendsRssClientIntegrationTest {
                 client.fetch("US")
             }
 
+        } finally {
+            server.stop(0)
+        }
+    }
+    
+    @Test
+    fun `Rejects invalid geo before sending HTTP request`() {
+        val requestCount = AtomicInteger(0)
+        
+        val server = HttpServer.create(
+            InetSocketAddress("127.0.0.1", 0),
+            0
+        )
+        
+        server.createContext("/trending/rss") { exchange ->
+            requestCount.incrementAndGet()
+            
+            val bytes = "<rss/>".toByteArray(StandardCharsets.UTF_8)
+            
+            exchange.sendResponseHeaders(200, bytes.size.toLong())
+            
+            exchange.responseBody.use { output ->
+                output.write(bytes)
+            }
+        }
+        
+        server.start()
+        
+        try {
+            val properties = GoogleTrendsRssProperties(
+                baseUrl = "http://127.0.0.1:${server.address.port}/trending/rss",
+                connectTimeout = Duration.ofSeconds(1),
+                requestTimeout = Duration.ofMillis(500),
+            )
+            
+            val client = GoogleTrendsRssClient(properties)
+            
+            val invalidGeos = listOf(
+                "kr",
+                "USA",
+                "1A",
+                "",
+                " K"
+            )
+            
+            invalidGeos.forEach { geo ->
+                assertThrows(
+                    IllegalArgumentException::class.java
+                ) {
+                    client.fetch(geo)
+                }
+            }
+            
+            assertEquals(
+                0,
+                requestCount.get(),
+                "Invalid geo should be rejected before HTTP request."
+            )
+            
         } finally {
             server.stop(0)
         }
