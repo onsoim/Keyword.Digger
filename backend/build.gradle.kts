@@ -34,6 +34,20 @@ kotlin {
     }
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("live")
+    }
+}
+
+tasks.register<Test>("liveTest") {
+    description = "Runs tests requiring external network access."
+    group = "verification"
+
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+
+    useJUnitPlatform {
+        includeTags("live")
+    }
 }

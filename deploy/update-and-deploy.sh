@@ -69,15 +69,23 @@ fi
 
 if [[ "$TARGET_SHA" == "$DEPLOYED_SHA" ]]; then
 
-    HEALTH_STATUS="$(docker inspect \
+    FRONTEND_HEALTH_STATUS="$(docker inspect \
         --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' \
-        keyword-digger 2>/dev/null || true)"
+        keyword-digger-frontend 2>/dev/null || true)"
     
-    if [[ "$HEALTH_STATUS" == "healthy" ]]; then
+    BACKEND_HEALTH_STATUS="$(docker inspect \
+        --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' \
+        keyword-digger-backend 2>/dev/null || true)"
+    
+    if [[   "$FRONTEND_HEALTH_STATUS" == "healthy" &&
+            "$BACKEND_HEALTH_STATUS" == "healthy" ]]; then
         echo "No changes detected. Application is healthy."
         exit 0
     fi
+
     echo "Application is not healthy. Re-deploying current revision"
+    echo "Backend: $BACKEND_HEALTH_STATUS"
+    echo "Frontend: $FRONTEND_HEALTH_STATUS"
 fi
 
 echo "Deploying $TARGET_SHA"

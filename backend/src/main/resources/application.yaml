@@ -1,3 +1,11 @@
 spring:
   application:
     name: Keyword-Digger
+
+keyword-digger:
+  trend:
+    google:
+      rss:
+        base-url: https://trends.google.com/trending/rss
+        connect-timeout: 5s
+        request-timeout: 15s
