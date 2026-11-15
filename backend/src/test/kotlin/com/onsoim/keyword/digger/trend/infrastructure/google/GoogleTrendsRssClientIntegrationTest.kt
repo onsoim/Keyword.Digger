@@ -2,6 +2,7 @@ package com.onsoim.keyword.digger.trend.infrastructure.google
 
 import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets
@@ -58,6 +59,56 @@ class GoogleTrendsRssClientIntegrationTest {
 
         } finally {
             server.stop(0)
+        }
+    }
+    
+    @Test
+    fun `Rejects HTTP 4xx and 5xx responses`() {
+        listOf(400, 500).forEach { statusCode ->
+            
+            val server = HttpServer.create(
+                InetSocketAddress("127.0.0.1", 0),
+                0
+            )
+            
+            val responseBody = "Error response".toByteArray(StandardCharsets.UTF_8)
+
+            server.createContext("/trending/rss") { exchange ->
+                exchange.sendResponseHeaders(
+                    statusCode,
+                    responseBody.size.toLong()
+                )
+                
+                exchange.responseBody.use { output ->
+                    output.write(responseBody)
+                }
+            }
+            
+            server.start()
+            
+            try {
+                val properties = GoogleTrendsRssProperties(
+                    baseUrl = "http://127.0.0.1:${server.address.port}/trending/rss",
+                    connectTimeout = Duration.ofSeconds(1),
+                    requestTimeout = Duration.ofSeconds(2),
+                )
+                
+                val client = GoogleTrendsRssClient(properties)
+                
+                val exception = assertThrows(
+                    IllegalStateException::class.java
+                ) {
+                    client.fetch("US")
+                }
+                
+                assertEquals(
+                    "Google Trends RSS request failed: HTTP $statusCode",
+                    exception.message
+                )
+
+            } finally {
+                server.stop(0)
+            }
         }
     }
 }
