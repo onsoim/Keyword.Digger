@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import java.net.http.HttpTimeoutException
 import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -109,6 +110,40 @@ class GoogleTrendsRssClientIntegrationTest {
             } finally {
                 server.stop(0)
             }
+        }
+    }
+    
+    @Test
+    fun `Fails when RSS response exceeds request timeout`() {
+        val server = HttpServer.create(
+            InetSocketAddress("127.0.0.1", 0),
+            0
+        )
+        
+        server.createContext("/trending/rss") { exchange ->
+            Thread.sleep(1_500)
+            exchange.close()
+        }
+        
+        server.start()
+        
+        try {
+            val properties = GoogleTrendsRssProperties(
+                baseUrl = "http://127.0.0.1:${server.address.port}/trending/rss",
+                connectTimeout = Duration.ofSeconds(1),
+                requestTimeout = Duration.ofMillis(500),
+            )
+            
+            val client = GoogleTrendsRssClient(properties)
+            
+            val exception = assertThrows(
+                HttpTimeoutException::class.java
+            ) {
+                client.fetch("US")
+            }
+
+        } finally {
+            server.stop(0)
         }
     }
 }
