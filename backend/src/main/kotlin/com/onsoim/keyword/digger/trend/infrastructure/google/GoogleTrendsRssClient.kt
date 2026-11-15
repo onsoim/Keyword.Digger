@@ -6,14 +6,15 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
-import java.time.Duration
 
 
 @Component
-class GoogleTrendsRssClient {
+class GoogleTrendsRssClient(
+    private val properties: GoogleTrendsRssProperties,
+) {
 
     private val httpClient = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(5))
+        .connectTimeout(properties.connectTimeout)
         .build()
 
     fun fetch(geo: String = "US"): String {
@@ -22,8 +23,8 @@ class GoogleTrendsRssClient {
         }
 
         val request = HttpRequest.newBuilder()
-            .uri(URI.create("$BASE_URL?geo=$geo"))
-            .timeout(Duration.ofSeconds(15))
+            .uri(URI.create("${properties.baseUrl}?geo=$geo"))
+            .timeout(properties.requestTimeout)
             .header("User-Agent", "Keyword-Digger/0.1")
             .header("Accept", "application/rss+xml, application/xml, text/xml")
             .GET()
@@ -41,9 +42,5 @@ class GoogleTrendsRssClient {
         }
 
         return response.body()
-    }
-
-    companion object {
-        private const val BASE_URL = "https://trends.google.com/trending/rss"
     }
 }
